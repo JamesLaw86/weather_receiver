@@ -2,7 +2,7 @@
 """
 Created on Sat Dec 15 12:32:17 2018
 
-@author: James
+@author: James Law
 """
 
 import requests
@@ -12,7 +12,8 @@ class weather_point(object):
     """
     Represents a weather data point
     """
-    def __init__(self, date_time = None,
+    def __init__(self, location = None,
+                 date_time = None,
                  mainT = None,
                  maxT = None,
                  minT = None,
@@ -28,6 +29,7 @@ class weather_point(object):
         This is only a subset of what is available from the data request
         more info is available, particularly pressure info if we want that..
         """
+        self.location = str(location)
         self.date_time = date_time
         self.mainT = str(mainT)
         self.minT = str(minT)
@@ -42,16 +44,16 @@ class weather_point(object):
         self.icon = str(icon)
     
     def __repr__(self):
-        rep = '<weather_point: time: ' + str(self.date_time) + ' temperature: ' + \
-        self.mainT + ' max Temp: ' + self.maxT + ' min Temp: ' + self.minT + \
-        ' humidity: ' + self.humidity + ' % cloud cover: ' + self.cloud_cover_per + \
-        ' rain mm: ' + self.rain_mm + ' snow mm: ' + self.snow_mm + \
-        ' wind speed mps: ' + self.wind_speed_mps + ' main weather: ' + self.main_weather + \
-        ' description: ' + self.description + ' icon: ' + self.icon + ' >'
+        rep = '<location: ' + self.location + ', weather_point: time: '\
+        + str(self.date_time) + ', temperature: ' + self.mainT + ', max Temp: '\
+        + self.maxT + ', min Temp: ' + self.minT + ', humidity: ' + \
+        self.humidity + ', % cloud cover: ' + self.cloud_cover_per + \
+        ', rain mm: ' + self.rain_mm + ', snow mm: ' + self.snow_mm + \
+        ', wind speed mps: ' + self.wind_speed_mps + ', main weather: ' + \
+        self.main_weather + ', description: ' + self.description + ', icon: ' \
+        + self.icon + ' >'
         return rep
                  
-                           
-        
 
 class cweather_receiver(object):
     """
@@ -98,7 +100,8 @@ class cweather_receiver(object):
         """
         Read single request point
         """
-        unix_time = int(weather['dt'])
+        location = self._get_val_check_error(weather, 'name')
+        unix_time = int(self._get_val_check_error(weather, 'dt'))
         date_time = datetime.datetime.fromtimestamp(unix_time)
         minT = self._get_val_check_error(weather, 'main', 'temp_min')
         maxT = self._get_val_check_error(weather, 'main', 'temp_max')
@@ -112,7 +115,7 @@ class cweather_receiver(object):
         wind_speed_mps = self._get_val_check_error(weather, 'wind', 'speed')
         snow_mm = self._get_val_check_error(weather, 'snow', '3h')
         
-        return weather_point(date_time = date_time,
+        return weather_point(location = location, date_time = date_time,
                               mainT = mainT, minT = minT,
                               maxT = maxT, humidity = humidity,
                               cloud_cover_per = cloud_cover_per,
@@ -127,7 +130,6 @@ class cweather_receiver(object):
         returns value from dict, returns 'None' if not present
         Probably not the most efficient way of doing this....
         """
-
         try:
             ret_val = dictionary
             for arg in args:
@@ -139,11 +141,13 @@ class cweather_receiver(object):
 
 if __name__ == '__main__':
     with open('key.txt', 'r') as txt_file:
-        key = txt_file.read()
-        ID = '2646557' #Horsham
+        lines = txt_file.readlines()
+        key = lines[0].split(':')[1].replace('\n', '')
+        ID = lines[1].split(':')[1].replace('\n', '')
         wr = cweather_receiver(key)
-        #res = wr.forecast_byID(ID)
-        res = wr.cur_weather_by_ID(ID)
+        current_weather = wr.cur_weather_by_ID(ID)
+        forecast = wr.forecast_byID(ID)
         
+
 
 
