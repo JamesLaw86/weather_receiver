@@ -22,12 +22,13 @@ class weather_point(object):
                  rain_mm = None,
                  snow_mm = None,
                  wind_speed_mps = None,
+                 wind_dir = None,
                  main_weather = None,
                  description = None,
-                 icon = None):
+                 icon = None,
+                 pressure = None):
         """
         This is only a subset of what is available from the data request
-        more info is available, particularly pressure info if we want that..
         """
         self.location = str(location)
         self.date_time = date_time
@@ -39,9 +40,11 @@ class weather_point(object):
         self.rain_mm = str(rain_mm)
         self.snow_mm = str(snow_mm)
         self.wind_speed_mps = str(wind_speed_mps)
+        self.wind_dir_deg = str(wind_dir)
         self.main_weather = str(main_weather)
         self.description = str(description)
         self.icon = str(icon)
+        self.pressure = str(pressure)
     
     def __repr__(self):
         rep = '<location: ' + self.location + ', weather_point: time: '\
@@ -76,6 +79,16 @@ class cweather_receiver(object):
         res_json = results.json()
         return self._read_weather_point(res_json)
     
+    def cur_weather_by_ID_json(self, city_ID):
+        """
+        makes the request for current  weather using city ID, this needs to be 
+        looked up in the city.list.json file
+        """
+        parameters = {'APPID' : self.key,
+                      'id' : city_ID}
+        results = requests.get(cweather_receiver.url + 'weather', parameters)
+        return results.json()
+    
     def forecast_byID(self, city_ID, key = None):
         """
         makes the request for forecast weather using city ID, this needs to be 
@@ -85,6 +98,7 @@ class cweather_receiver(object):
                       'id' : city_ID}
         results = requests.get(cweather_receiver.url + 'forecast', parameters)
         if not results.ok:
+            print('error retrieving forecast')
             return None
         
         res_json = results.json()
@@ -95,6 +109,20 @@ class cweather_receiver(object):
             weather_points.append(point)
             
         return weather_points
+    
+    def forecast_byID_json(self, city_ID, key = None):
+        """
+        makes the request for forecast weather using city ID, this needs to be 
+        looked up in the city.list.json file
+        """
+        parameters = {'APPID' : self.key,
+                      'id' : city_ID}
+        results = requests.get(cweather_receiver.url + 'forecast', parameters)
+        if not results.ok:
+            print('error retrieving forecast')
+            return None
+            
+        return results.json()
     
     def _read_weather_point(self, weather):
         """
@@ -113,7 +141,9 @@ class cweather_receiver(object):
         icon = self._get_val_check_error(weather, 'weather', 0, 'icon')
         rain_mm = self._get_val_check_error(weather, 'rain', '3h')
         wind_speed_mps = self._get_val_check_error(weather, 'wind', 'speed')
+        wind_dir = self._get_val_check_error(weather, 'wind', 'deg')
         snow_mm = self._get_val_check_error(weather, 'snow', '3h')
+        pressure = self._get_val_check_error(weather, 'main', 'pressure')
         
         return weather_point(location = location, date_time = date_time,
                               mainT = mainT, minT = minT,
@@ -122,7 +152,9 @@ class cweather_receiver(object):
                               description = description, icon = icon,
                               main_weather = main_weather,
                               rain_mm = rain_mm, snow_mm = snow_mm,
-                              wind_speed_mps = wind_speed_mps)
+                              wind_speed_mps = wind_speed_mps,
+                              wind_dir = wind_dir,
+                              pressure = pressure)
         
     
     def _get_val_check_error(self, dictionary, *args):
@@ -142,11 +174,13 @@ class cweather_receiver(object):
 if __name__ == '__main__':
     with open('key.txt', 'r') as txt_file:
         lines = txt_file.readlines()
-        key = lines[0].split(':')[1].replace('\n', '')
-        ID = lines[1].split(':')[1].replace('\n', '')
+        key = lines[0]
+        ID = '7290651'
         wr = cweather_receiver(key)
         current_weather = wr.cur_weather_by_ID(ID)
         forecast = wr.forecast_byID(ID)
+        
+
         
 
 
