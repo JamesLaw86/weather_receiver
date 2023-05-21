@@ -45,6 +45,20 @@ class weather_point(object):
         self.description = str(description)
         self.icon = str(icon)
         self.pressure = str(pressure)
+        #convert Kelvin to degrees celcius
+        try:
+            f_mainT = float(self.mainT)
+            f_mainT = f_mainT - 273.15
+            self.mainT = f"{f_mainT:.{2}f}"
+            f_minT = float(self.minT)
+            f_minT = f_minT - 273.15
+            self.minT = f"{f_minT:.{2}f}"
+            f_maxT = float(self.maxT)
+            f_maxT = f_maxT - 273.15
+            self.maxT = f"{f_maxT:.{2}f}"
+        except:
+            pass
+            
     
     def __repr__(self):
         rep = '<location: ' + self.location + ', weather_point: time: '\
@@ -180,8 +194,3 @@ if __name__ == '__main__':
         current_weather = wr.cur_weather_by_ID(ID)
         forecast = wr.forecast_byID(ID)
         
-
-        
-
-
-
